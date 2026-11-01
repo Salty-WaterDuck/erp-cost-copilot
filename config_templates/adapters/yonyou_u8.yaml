@@ -1,0 +1,113 @@
+# 用友 U8 导出映射（示例）
+# 作用：把 ERP 导出的中文列名映射到规范字段；改这个文件即可适配真实导出
+# 约定：一个文件一张单据；金额/数量不带千分位；日期 YYYY-MM-DD；布尔用 是/否
+
+vendor: yonyou_u8
+label: 用友 U8（示例模板）
+
+files:
+  meta: 00-账套信息.csv
+  materials: 01-物料主数据.csv
+  bom: 02-BOM.csv
+  routing: 03-工艺路线.csv
+  cost_centers: 04-成本中心.csv
+  orders: 05-生产订单.csv
+  issues: 06-领料单.csv
+  labor: 07-报工单.csv
+  overhead: 08-制造费用.csv
+  opening: 09-期初余额.csv
+  wip: 10-期初在产.csv
+
+columns:
+  meta:
+    key: 键
+    value: 值
+  materials:
+    code: 物料编码
+    name: 物料名称
+    mtype: 物料类型
+    uom: 单位
+    standard_price: 标准价
+    spec: 规格
+  bom:
+    parent: 父项编码
+    component: 子项编码
+    qty_per: 单位用量
+    scrap_rate: 损耗率
+    note: 备注
+  routing:
+    product: 产品编码
+    seq: 工序号
+    cost_center: 成本中心
+    std_hours: 标准工时
+    operation: 工序说明
+  cost_centers:
+    code: 成本中心编码
+    name: 成本中心名称
+    labor_rate: 人工费率
+    overhead_budget: 费用预算
+    budget_hours: 预算工时
+  orders:
+    order_no: 工单号
+    product: 产品编码
+    qty_planned: 计划数量
+    qty_completed: 完工数量
+    qty_scrapped: 报废数量
+    wip_progress: 在产完工程度
+    material_completion: 投料程度
+    status: 状态
+    start_date: 开工日期
+    due_date: 完工日期
+    carried_from: 来源期间
+  issues:
+    doc_no: 单据号
+    order_no: 工单号
+    material: 物料编码
+    qty: 数量
+    unit_price: 单价
+    issue_date: 日期
+    is_return: 是否退料
+  labor:
+    doc_no: 单据号
+    order_no: 工单号
+    cost_center: 成本中心
+    hours: 工时
+    hourly_rate: 费率
+    work_date: 日期
+    operation: 工序
+  overhead:
+    doc_no: 单据号
+    cost_center: 成本中心
+    expense_type: 费用类型
+    amount: 金额
+  opening:
+    account: 科目
+    debit: 借方
+    credit: 贷方
+  wip:
+    order_no: 工单号
+    product: 产品编码
+    qty_planned: 计划数量
+    qty_completed: 累计完工
+    qty_in_wip: 在产数量
+    material_completion: 投料程度
+    wip_progress: 完工程度
+    cost_material: 材料成本
+    cost_labor: 人工成本
+    cost_oh: 费用成本
+    carried_from: 来源期间
+
+values:
+  mtype:
+    外购: RAW
+    自制: SEMI
+    成品: FINISHED
+  status:
+    草稿: DRAFT
+    下达: RELEASED
+    在制: IN_PROGRESS
+    完工: COMPLETED
+    关闭: CLOSED
+  is_return:
+    是: true
+    否: false

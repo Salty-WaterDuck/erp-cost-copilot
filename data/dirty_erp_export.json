@@ -1,0 +1,506 @@
+{
+  "company": "宁波恒宇电器有限公司（脏数据演示）",
+  "period": "2026-10",
+  "currency": "CNY",
+  "cost_centers": [
+    {
+      "code": "CC-ASM",
+      "name": "总装车间",
+      "labor_rate": "28.00",
+      "overhead_budget": "3600.00",
+      "budget_hours": "120.00"
+    },
+    {
+      "code": "CC-QA",
+      "name": "质检中心",
+      "labor_rate": "32.00",
+      "overhead_budget": "300.00",
+      "budget_hours": "10.00"
+    },
+    {
+      "code": "CC-MNT",
+      "name": "设备维护组",
+      "labor_rate": "30.00",
+      "overhead_budget": "240.00",
+      "budget_hours": "8.00"
+    },
+    {
+      "code": "CC-PAINT",
+      "name": "喷涂车间",
+      "labor_rate": "30.00",
+      "overhead_budget": "1200.00",
+      "budget_hours": "50.00"
+    }
+  ],
+  "materials": [
+    {
+      "code": "RM-SS304",
+      "name": "304 不锈钢板",
+      "mtype": "RAW",
+      "uom": "kg",
+      "standard_price": "12.00"
+    },
+    {
+      "code": "RM-ABS",
+      "name": "ABS 塑料粒",
+      "mtype": "RAW",
+      "uom": "kg",
+      "standard_price": "18.00"
+    },
+    {
+      "code": "PT-THERMO",
+      "name": "温控器",
+      "mtype": "RAW",
+      "uom": "个",
+      "standard_price": "6.50"
+    },
+    {
+      "code": "PT-HEATER",
+      "name": "发热盘",
+      "mtype": "RAW",
+      "uom": "个",
+      "standard_price": "9.80"
+    },
+    {
+      "code": "PT-CORD",
+      "name": "电源线",
+      "mtype": "RAW",
+      "uom": "条",
+      "standard_price": "4.20"
+    },
+    {
+      "code": "PT-BOX",
+      "name": "彩盒包装",
+      "mtype": "RAW",
+      "uom": "个",
+      "standard_price": "1.50"
+    },
+    {
+      "code": "PT-SCREW",
+      "name": "M4 螺丝",
+      "mtype": "RAW",
+      "uom": "个",
+      "standard_price": "0.05"
+    },
+    {
+      "code": "SF-BODY",
+      "name": "壶身组件",
+      "mtype": "SEMI",
+      "uom": "件",
+      "standard_price": "0"
+    },
+    {
+      "code": "SF-BASE",
+      "name": "底座组件",
+      "mtype": "SEMI",
+      "uom": "件",
+      "standard_price": "0"
+    },
+    {
+      "code": "FG-KT100",
+      "name": "电热水壶 KT-100",
+      "mtype": "FINISHED",
+      "uom": "台",
+      "standard_price": "0"
+    }
+  ],
+  "bom": [
+    {
+      "parent": "SF-BODY",
+      "component": "RM-SS304",
+      "qty_per": "0.8",
+      "scrap_rate": "0.02",
+      "note": "冲压落料损耗 2%"
+    },
+    {
+      "parent": "SF-BODY",
+      "component": "PT-THERMO",
+      "qty_per": "1",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "SF-BODY",
+      "component": "PT-SCREW",
+      "qty_per": "4",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "SF-BASE",
+      "component": "RM-ABS",
+      "qty_per": "0.3",
+      "scrap_rate": "0.03",
+      "note": "注塑水口料损耗 3%"
+    },
+    {
+      "parent": "SF-BASE",
+      "component": "PT-HEATER",
+      "qty_per": "1",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "SF-BASE",
+      "component": "PT-SCREW",
+      "qty_per": "4",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "FG-KT100",
+      "component": "SF-BODY",
+      "qty_per": "1",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "FG-KT100",
+      "component": "SF-BASE",
+      "qty_per": "1",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "FG-KT100",
+      "component": "PT-CORD",
+      "qty_per": "1",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "FG-KT100",
+      "component": "PT-BOX",
+      "qty_per": "1",
+      "scrap_rate": "0"
+    }
+  ],
+  "routing": [
+    {
+      "product": "SF-BODY",
+      "seq": 10,
+      "cost_center": "CC-ASM",
+      "std_hours": "0.05",
+      "operation": "冲压+装配"
+    },
+    {
+      "product": "SF-BASE",
+      "seq": 10,
+      "cost_center": "CC-ASM",
+      "std_hours": "0.04",
+      "operation": "注塑+装配"
+    },
+    {
+      "product": "FG-KT100",
+      "seq": 10,
+      "cost_center": "CC-ASM",
+      "std_hours": "0.08",
+      "operation": "总装"
+    },
+    {
+      "product": "FG-KT100",
+      "seq": 20,
+      "cost_center": "CC-QA",
+      "std_hours": "0.02",
+      "operation": "整机测试"
+    },
+    {
+      "product": "FG-KT100",
+      "seq": 15,
+      "cost_center": "CC-PAINT",
+      "std_hours": "0.03",
+      "operation": "喷涂"
+    }
+  ],
+  "orders": [
+    {
+      "order_no": "PO-1001",
+      "product": "SF-BODY",
+      "qty_planned": "700",
+      "qty_completed": "695",
+      "qty_scrapped": "5",
+      "wip_progress": "0",
+      "material_completion": "1",
+      "status": "COMPLETED",
+      "start_date": "2026-10-01",
+      "due_date": "2026-10-10"
+    },
+    {
+      "order_no": "PO-1002",
+      "product": "SF-BASE",
+      "qty_planned": "692",
+      "qty_completed": "690",
+      "qty_scrapped": "2",
+      "wip_progress": "0",
+      "material_completion": "1",
+      "status": "COMPLETED",
+      "start_date": "2026-10-02",
+      "due_date": "2026-10-12"
+    },
+    {
+      "order_no": "PO-1003",
+      "product": "FG-KT100",
+      "qty_planned": "450",
+      "qty_completed": "450",
+      "qty_scrapped": "0",
+      "wip_progress": "0",
+      "material_completion": "1",
+      "status": "COMPLETED",
+      "start_date": "2026-10-08",
+      "due_date": "2026-10-20"
+    },
+    {
+      "order_no": "PO-1004",
+      "product": "FG-KT100",
+      "qty_planned": "200",
+      "qty_completed": "150",
+      "qty_scrapped": "3",
+      "wip_progress": "0.4",
+      "material_completion": "1",
+      "status": "IN_PROGRESS",
+      "start_date": "2026-10-15",
+      "due_date": "2026-10-28"
+    }
+  ],
+  "issues": [
+    {
+      "doc_no": "MI-1001",
+      "order_no": "PO-1001",
+      "material": "RM-SS304",
+      "qty": "600",
+      "unit_price": "12.30",
+      "issue_date": "2026-10-02"
+    },
+    {
+      "doc_no": "MI-1002",
+      "order_no": "PO-1001",
+      "material": "PT-THERMO",
+      "qty": "700",
+      "unit_price": "6.80",
+      "issue_date": "2026-10-02"
+    },
+    {
+      "doc_no": "MI-1003",
+      "order_no": "PO-1001",
+      "material": "PT-SCREW",
+      "qty": "2800",
+      "unit_price": "0.05",
+      "issue_date": "2026-10-02"
+    },
+    {
+      "doc_no": "MI-1004",
+      "order_no": "PO-1001",
+      "material": "RM-SS304",
+      "qty": "-5",
+      "unit_price": "12.30",
+      "issue_date": "2026-10-09",
+      "is_return": true
+    },
+    {
+      "doc_no": "MI-1005",
+      "order_no": "PO-1002",
+      "material": "RM-ABS",
+      "qty": "214",
+      "unit_price": "17.60",
+      "issue_date": "2026-10-03"
+    },
+    {
+      "doc_no": "MI-1006",
+      "order_no": "PO-1002",
+      "material": "PT-HEATER",
+      "qty": "700",
+      "unit_price": "9.80",
+      "issue_date": "2026-10-03"
+    },
+    {
+      "doc_no": "MI-1007",
+      "order_no": "PO-1002",
+      "material": "PT-SCREW",
+      "qty": "2800",
+      "unit_price": "0.05",
+      "issue_date": "2026-10-03"
+    },
+    {
+      "doc_no": "MI-1008",
+      "order_no": "PO-1003",
+      "material": "SF-BODY",
+      "qty": "450",
+      "unit_price": "16.492",
+      "issue_date": "2026-10-10"
+    },
+    {
+      "doc_no": "MI-1009",
+      "order_no": "PO-1003",
+      "material": "SF-BASE",
+      "qty": "450",
+      "unit_price": "15.562",
+      "issue_date": "2026-10-12"
+    },
+    {
+      "doc_no": "MI-1010",
+      "order_no": "PO-1003",
+      "material": "PT-CORD",
+      "qty": "450",
+      "unit_price": "4.35",
+      "issue_date": "2026-10-12"
+    },
+    {
+      "doc_no": "MI-1011",
+      "order_no": "PO-1003",
+      "material": "PT-BOX",
+      "qty": "450",
+      "unit_price": "1.50",
+      "issue_date": "2026-10-12"
+    },
+    {
+      "doc_no": "MI-1012",
+      "order_no": "PO-1004",
+      "material": "SF-BODY",
+      "qty": "200",
+      "unit_price": "16.492",
+      "issue_date": "2026-10-16"
+    },
+    {
+      "doc_no": "MI-1013",
+      "order_no": "PO-1004",
+      "material": "SF-BASE",
+      "qty": "200",
+      "unit_price": "15.562",
+      "issue_date": "2026-10-17"
+    },
+    {
+      "doc_no": "MI-1014",
+      "order_no": "PO-1004",
+      "material": "PT-CORD",
+      "qty": "200",
+      "unit_price": "4.35",
+      "issue_date": "2026-10-17"
+    },
+    {
+      "doc_no": "MI-1015",
+      "order_no": "PO-1004",
+      "material": "PT-BOX",
+      "qty": "200",
+      "unit_price": "1.50",
+      "issue_date": "2026-10-17"
+    },
+    {
+      "doc_no": "MI-1016",
+      "order_no": "PO-1002",
+      "material": "RM-ABS",
+      "qty": "-10",
+      "unit_price": "17.60",
+      "issue_date": "2026-10-18"
+    }
+  ],
+  "labor": [
+    {
+      "doc_no": "LR-2001",
+      "order_no": "PO-1001",
+      "cost_center": "CC-ASM",
+      "hours": "38",
+      "hourly_rate": "28.00",
+      "work_date": "2026-10-09"
+    },
+    {
+      "doc_no": "LR-2003",
+      "order_no": "PO-1003",
+      "cost_center": "CC-ASM",
+      "hours": "40",
+      "hourly_rate": "30.00",
+      "work_date": "2026-10-20"
+    },
+    {
+      "doc_no": "LR-2004",
+      "order_no": "PO-1003",
+      "cost_center": "CC-QA",
+      "hours": "9.5",
+      "hourly_rate": "32.00",
+      "work_date": "2026-10-20"
+    },
+    {
+      "doc_no": "LR-2005",
+      "order_no": "PO-1004",
+      "cost_center": "CC-ASM",
+      "hours": "14",
+      "hourly_rate": "28.00",
+      "work_date": "2026-10-27"
+    },
+    {
+      "doc_no": "LR-2006",
+      "order_no": "PO-1004",
+      "cost_center": "CC-QA",
+      "hours": "4",
+      "hourly_rate": "32.00",
+      "work_date": "2026-10-27"
+    }
+  ],
+  "overhead": [
+    {
+      "doc_no": "OH-ASM-01",
+      "cost_center": "CC-ASM",
+      "expense_type": "水电费",
+      "amount": "1800.00"
+    },
+    {
+      "doc_no": "OH-ASM-02",
+      "cost_center": "CC-ASM",
+      "expense_type": "设备折旧",
+      "amount": "1200.00"
+    },
+    {
+      "doc_no": "OH-ASM-03",
+      "cost_center": "CC-ASM",
+      "expense_type": "车间管理薪酬",
+      "amount": "700.00"
+    },
+    {
+      "doc_no": "OH-ASM-04",
+      "cost_center": "CC-ASM",
+      "expense_type": "辅料耗材",
+      "amount": "200.00"
+    },
+    {
+      "doc_no": "OH-QA-01",
+      "cost_center": "CC-QA",
+      "expense_type": "检测设备折旧",
+      "amount": "180.00"
+    },
+    {
+      "doc_no": "OH-QA-02",
+      "cost_center": "CC-QA",
+      "expense_type": "检测耗材",
+      "amount": "140.00"
+    },
+    {
+      "doc_no": "OH-MNT-01",
+      "cost_center": "CC-MNT",
+      "expense_type": "维修备件",
+      "amount": "160.00"
+    },
+    {
+      "doc_no": "OH-MNT-02",
+      "cost_center": "CC-MNT",
+      "expense_type": "外委维修",
+      "amount": "100.00"
+    },
+    {
+      "doc_no": "OH-PAINT-01",
+      "cost_center": "CC-PAINT",
+      "expense_type": "喷涂线电费",
+      "amount": "1200.00"
+    }
+  ],
+  "params": {
+    "material_qty_tolerance": "0.02",
+    "order_variance_tolerance": "0.03",
+    "scrap_rate_tolerance": "0.02",
+    "overhead_budget_tolerance": "0"
+  },
+  "opening_balances": {
+    "debit": {
+      "1002": "500000.00",
+      "1403": "80000.00",
+      "1405": "120000.00",
+      "1406": "5000.00"
+    },
+    "credit": {
+      "1602": "60000.00",
+      "2211": "30000.00",
+      "4001": "615000.00"
+    }
+  }
+}

@@ -1,0 +1,144 @@
+# 离散制造（组装型）业务 Sense 模板
+# 用途：给 LLM 解释层注入行业知识，让归因不是泛泛而谈
+# 语法：仅使用 costcontrol.yaml_lite 支持的 YAML 子集（映射、标量列表、注释）
+
+industry: discrete_manufacturing
+label: 离散制造（组装型）
+version: 1
+
+description: "多层级 BOM、按工单组织生产、半成品独立入库；成本随实物逐级结转，材料量差与报废是主要波动源。"
+
+characteristics:
+  bom:
+    depth: multi_level
+    semi_finished: true
+    scrap_sensitive: true
+    notes:
+      - "多层 BOM 下半成品必须按完全成本逐级结转，否则成品材料成本会被低估"
+      - "冲压、注塑的损耗率是量差主要来源，重点看边角料与退料"
+  labor:
+    direct_labor_ratio: medium
+    overtime_sensitive: true
+    notes:
+      - "加班与临时工比例上升，会先体现在人工效率差异，再传导到制造费用"
+  overhead:
+    machine_intensive: true
+    notes:
+      - "总装与注塑设备折旧占比高，制造费用更接近机器工时驱动"
+
+allocation:
+  primary_basis: machine_hours
+  secondary_basis: labor_hours
+  service_center: step_down
+  notes:
+    - "设备维护组等辅助部门应做交互分配或阶梯分配，长期挂账说明动因没维护"
+    - "机器工时缺失退化为人工工时，必须在报告里注明口径变化"
+
+anomalies:
+  unreturned_material:
+    label: "退料未入库"
+    owner: "车间主任 / 成本会计"
+    signal: "实际领料明显超过标准用量，且没有对应的退料单"
+    suggestion: "盘点车间余料并补录退料单；同时确认是否存在替代料、报废未报"
+  order_overspend:
+    label: "工单超支"
+    owner: "生产计划 / 车间主任"
+    signal: "工单实际成本高于标准，且差异集中在某一成本项目"
+    suggestion: "按价差与量差拆分责任：价差找采购，量差找车间，效率找工艺与排产"
+  missed_labor:
+    label: "漏报工单"
+    owner: "车间统计 / 成本会计"
+    signal: "工单有领料但报工工时接近 0，或同类工单工时相差数倍"
+    suggestion: "核对报工单、委外工序与考勤，确认是否漏录或跨期报工"
+  unallocated_overhead:
+    label: "制造费用未分配"
+    owner: "财务 / 成本会计"
+    signal: "费用池有余额但本期无工单消耗该成本中心动因"
+    suggestion: "补齐动因数据，或经审批转期间费用；连续挂账要检查成本中心是否该停用"
+  overhead_budget:
+    label: "制造费用超预算"
+    owner: "车间主任 / 财务"
+    signal: "成本中心实际费用超过预算，且超支集中在某项费用"
+    suggestion: "区分固定与变动费用：固定费用看产能利用，变动费用看单耗"
+  scrap:
+    label: "报废率偏高"
+    owner: "质量部 / 车间"
+    signal: "报废数量占产出比例超过行业容差"
+    suggestion: "按料废、工废分开统计；料废查来料与工艺，工废查设备与操作"
+  transfer_std:
+    label: "半成品按标准价结转"
+    owner: "成本会计"
+    signal: "下游领用半成品但本期无该半成品完工成本"
+    suggestion: "确认上游工单是否跨期未完工；跨期场景下期初在产结转后应恢复实际价"
+  no_standard:
+    label: "缺少标准成本"
+    owner: "技术部 / 成本会计"
+    signal: "工单有实际成本但没有 BOM 或工艺路线"
+    suggestion: "补齐 BOM 与工时定额，否则差异分析没有基准"
+
+rule_map:
+  MAT-OVERUSE: unreturned_material
+  ORDER-OVERSPEND: order_overspend
+  SCRAP-RATE: scrap
+  OH-UNALLOCATED: unallocated_overhead
+  OH-OVERBUDGET: overhead_budget
+  TRANSFER-STD: transfer_std
+  NO-STANDARD: no_standard
+
+prompt:
+  audience: "财务经理与成本会计"
+  tone: "直接、可执行、不绕弯"
+  max_items: 6
+  must_include:
+    - "金额、工单号、成本中心"
+    - "判断依据，且只能来自给定事实"
+    - "建议动作与责任岗位"
+  forbidden:
+    - "编造未提供的数字或单据"
+    - "直接给出会计分录调整，必须注明需人工复核"
+
+# 责任归因：差异事实的维度 → 责任主体
+# 模板变量 {{ cost_center }} / {{ work_center }} 会从事实与下面的组织映射中解析
+org:
+  cost_centers:
+    CC-ASM: 总装车间
+    CC-QA: 质检中心
+    CC-MNT: 设备维护组
+  work_centers:
+    CC-ASM: WC-ASM-1
+    CC-QA: WC-QA-1
+  suppliers:
+    RM-SS304: 宁波金属材料
+    RM-ABS: 苏州塑胶
+    PT-THERMO: 东莞温控
+    PT-HEATER: 佛山发热盘
+
+attribution:
+  fallback: 成本会计复核
+  rules:
+    # 半成品的价差不是采购价差，是上游工单转下来的成本，先单独归因
+    - when: { cost_element: MAT-PRICE-VAR, material_type: SEMI }
+      owner: 上游工单责任车间
+      secondary: 成本会计
+      evidence: [material, upstream_orders, unit_price, std_price]
+    - when: { cost_element: MAT-PRICE-VAR }
+      owner: 采购部
+      evidence: [material, supplier, unit_price, std_price]
+    - when: { cost_element: MAT-QTY-VAR }
+      owner: "{{ cost_center }}"
+      secondary: "{{ work_center }} 产线"
+      evidence: [material, qty, std_qty]
+    - when: { cost_element: LABOR-RATE-VAR }
+      owner: 人事 / 生产
+      evidence: [hours, rate, std_rate]
+    - when: { cost_element: LABOR-EFF-VAR }
+      owner: "{{ work_center }} 产线负责人"
+      secondary: 生产计划部
+      evidence: [hours, std_hours]
+    - when: { cost_element: OH-SPEND-VAR }
+      owner: "{{ cost_center }}"
+      evidence: [amount, budgeted_at_actual]
+    - when: { cost_element: OH-EFF-VAR }
+      owner: "{{ cost_center }}"
+      secondary: 生产计划部
+      evidence: [hours, std_hours]

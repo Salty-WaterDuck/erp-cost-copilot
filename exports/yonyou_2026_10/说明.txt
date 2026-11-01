@@ -1,0 +1,3 @@
+本目录为 ERP 导出形态的示例数据（由 costcontrol 生成），用于适配器演示。
+厂商模板：用友 U8（示例模板）（yonyou_u8）
+列名与字段的对应关系见 config_templates/adapters/。

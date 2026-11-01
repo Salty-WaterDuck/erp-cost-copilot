@@ -1,0 +1,381 @@
+{
+  "company": "宁波恒宇电器有限公司",
+  "period": "2026-11",
+  "currency": "CNY",
+  "cost_centers": [
+    {
+      "code": "CC-ASM",
+      "name": "总装车间",
+      "labor_rate": "28.00",
+      "overhead_budget": "3600.00",
+      "budget_hours": "120.00"
+    },
+    {
+      "code": "CC-QA",
+      "name": "质检中心",
+      "labor_rate": "32.00",
+      "overhead_budget": "300.00",
+      "budget_hours": "10.00"
+    },
+    {
+      "code": "CC-MNT",
+      "name": "设备维护组",
+      "labor_rate": "30.00",
+      "overhead_budget": "240.00",
+      "budget_hours": "8.00"
+    }
+  ],
+  "materials": [
+    {
+      "code": "RM-SS304",
+      "name": "304 不锈钢板",
+      "mtype": "RAW",
+      "uom": "kg",
+      "standard_price": "12.00"
+    },
+    {
+      "code": "RM-ABS",
+      "name": "ABS 塑料粒",
+      "mtype": "RAW",
+      "uom": "kg",
+      "standard_price": "18.00"
+    },
+    {
+      "code": "PT-THERMO",
+      "name": "温控器",
+      "mtype": "RAW",
+      "uom": "个",
+      "standard_price": "6.50"
+    },
+    {
+      "code": "PT-HEATER",
+      "name": "发热盘",
+      "mtype": "RAW",
+      "uom": "个",
+      "standard_price": "9.80"
+    },
+    {
+      "code": "PT-CORD",
+      "name": "电源线",
+      "mtype": "RAW",
+      "uom": "条",
+      "standard_price": "4.20"
+    },
+    {
+      "code": "PT-BOX",
+      "name": "彩盒包装",
+      "mtype": "RAW",
+      "uom": "个",
+      "standard_price": "1.50"
+    },
+    {
+      "code": "PT-SCREW",
+      "name": "M4 螺丝",
+      "mtype": "RAW",
+      "uom": "个",
+      "standard_price": "0.05"
+    },
+    {
+      "code": "SF-BODY",
+      "name": "壶身组件",
+      "mtype": "SEMI",
+      "uom": "件",
+      "standard_price": "0"
+    },
+    {
+      "code": "SF-BASE",
+      "name": "底座组件",
+      "mtype": "SEMI",
+      "uom": "件",
+      "standard_price": "0"
+    },
+    {
+      "code": "FG-KT100",
+      "name": "电热水壶 KT-100",
+      "mtype": "FINISHED",
+      "uom": "台",
+      "standard_price": "0"
+    }
+  ],
+  "bom": [
+    {
+      "parent": "SF-BODY",
+      "component": "RM-SS304",
+      "qty_per": "0.8",
+      "scrap_rate": "0.02",
+      "note": "冲压落料损耗 2%"
+    },
+    {
+      "parent": "SF-BODY",
+      "component": "PT-THERMO",
+      "qty_per": "1",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "SF-BODY",
+      "component": "PT-SCREW",
+      "qty_per": "4",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "SF-BASE",
+      "component": "RM-ABS",
+      "qty_per": "0.3",
+      "scrap_rate": "0.03",
+      "note": "注塑水口料损耗 3%"
+    },
+    {
+      "parent": "SF-BASE",
+      "component": "PT-HEATER",
+      "qty_per": "1",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "SF-BASE",
+      "component": "PT-SCREW",
+      "qty_per": "4",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "FG-KT100",
+      "component": "SF-BODY",
+      "qty_per": "1",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "FG-KT100",
+      "component": "SF-BASE",
+      "qty_per": "1",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "FG-KT100",
+      "component": "PT-CORD",
+      "qty_per": "1",
+      "scrap_rate": "0"
+    },
+    {
+      "parent": "FG-KT100",
+      "component": "PT-BOX",
+      "qty_per": "1",
+      "scrap_rate": "0"
+    }
+  ],
+  "routing": [
+    {
+      "product": "SF-BODY",
+      "seq": 10,
+      "cost_center": "CC-ASM",
+      "std_hours": "0.05",
+      "operation": "冲压+装配"
+    },
+    {
+      "product": "SF-BASE",
+      "seq": 10,
+      "cost_center": "CC-ASM",
+      "std_hours": "0.04",
+      "operation": "注塑+装配"
+    },
+    {
+      "product": "FG-KT100",
+      "seq": 10,
+      "cost_center": "CC-ASM",
+      "std_hours": "0.08",
+      "operation": "总装"
+    },
+    {
+      "product": "FG-KT100",
+      "seq": 20,
+      "cost_center": "CC-QA",
+      "std_hours": "0.02",
+      "operation": "整机测试"
+    }
+  ],
+  "orders": [
+    {
+      "order_no": "PO-1002",
+      "product": "SF-BASE",
+      "qty_planned": "8",
+      "qty_completed": "8",
+      "qty_scrapped": "0",
+      "wip_progress": "0",
+      "material_completion": "1",
+      "carried_from": "2026-10",
+      "status": "COMPLETED",
+      "start_date": "2026-10-02",
+      "due_date": "2026-11-05"
+    },
+    {
+      "order_no": "PO-1004",
+      "product": "FG-KT100",
+      "qty_planned": "47",
+      "qty_completed": "47",
+      "qty_scrapped": "0",
+      "wip_progress": "0",
+      "material_completion": "1",
+      "carried_from": "2026-10",
+      "status": "COMPLETED",
+      "start_date": "2026-10-15",
+      "due_date": "2026-11-10"
+    },
+    {
+      "order_no": "PO-1101",
+      "product": "SF-BASE",
+      "qty_planned": "400",
+      "qty_completed": "380",
+      "qty_scrapped": "2",
+      "wip_progress": "0.6",
+      "material_completion": "1",
+      "status": "IN_PROGRESS",
+      "start_date": "2026-11-02",
+      "due_date": "2026-11-20"
+    }
+  ],
+  "issues": [
+    {
+      "doc_no": "MI-1101",
+      "order_no": "PO-1101",
+      "material": "RM-ABS",
+      "qty": "128",
+      "unit_price": "18.20",
+      "issue_date": "2026-11-03"
+    },
+    {
+      "doc_no": "MI-1102",
+      "order_no": "PO-1101",
+      "material": "PT-HEATER",
+      "qty": "400",
+      "unit_price": "9.90",
+      "issue_date": "2026-11-03"
+    },
+    {
+      "doc_no": "MI-1103",
+      "order_no": "PO-1101",
+      "material": "PT-SCREW",
+      "qty": "1600",
+      "unit_price": "0.05",
+      "issue_date": "2026-11-03"
+    }
+  ],
+  "labor": [
+    {
+      "doc_no": "LR-2101",
+      "order_no": "PO-1002",
+      "cost_center": "CC-ASM",
+      "hours": "0.2",
+      "hourly_rate": "28.00",
+      "work_date": "2026-11-04"
+    },
+    {
+      "doc_no": "LR-2102",
+      "order_no": "PO-1004",
+      "cost_center": "CC-ASM",
+      "hours": "2.5",
+      "hourly_rate": "28.00",
+      "work_date": "2026-11-08"
+    },
+    {
+      "doc_no": "LR-2103",
+      "order_no": "PO-1004",
+      "cost_center": "CC-QA",
+      "hours": "1.2",
+      "hourly_rate": "32.00",
+      "work_date": "2026-11-08"
+    },
+    {
+      "doc_no": "LR-2104",
+      "order_no": "PO-1101",
+      "cost_center": "CC-ASM",
+      "hours": "15",
+      "hourly_rate": "28.00",
+      "work_date": "2026-11-18"
+    }
+  ],
+  "overhead": [
+    {
+      "doc_no": "OH-ASM-11",
+      "cost_center": "CC-ASM",
+      "expense_type": "水电费",
+      "amount": "300.00"
+    },
+    {
+      "doc_no": "OH-ASM-12",
+      "cost_center": "CC-ASM",
+      "expense_type": "设备折旧",
+      "amount": "240.00"
+    },
+    {
+      "doc_no": "OH-ASM-13",
+      "cost_center": "CC-ASM",
+      "expense_type": "车间管理薪酬",
+      "amount": "60.00"
+    },
+    {
+      "doc_no": "OH-ASM-14",
+      "cost_center": "CC-ASM",
+      "expense_type": "辅料耗材",
+      "amount": "20.00"
+    },
+    {
+      "doc_no": "OH-QA-11",
+      "cost_center": "CC-QA",
+      "expense_type": "检测耗材",
+      "amount": "40.00"
+    },
+    {
+      "doc_no": "OH-MNT-11",
+      "cost_center": "CC-MNT",
+      "expense_type": "维修备件",
+      "amount": "250.00"
+    }
+  ],
+  "params": {
+    "material_qty_tolerance": "0.02",
+    "order_variance_tolerance": "0.03",
+    "scrap_rate_tolerance": "0.02",
+    "overhead_budget_tolerance": "0"
+  },
+  "opening_balances": {
+    "debit": {
+      "1002": "497600.00",
+      "1403": "53212.60",
+      "1405": "150879.15",
+      "1406": "6653.78",
+      "5001": "2345.47",
+      "6602": "260.00"
+    },
+    "credit": {
+      "1602": "61380.00",
+      "2211": "34571.00",
+      "4001": "615000.00"
+    }
+  },
+  "wip_opening": [
+    {
+      "order_no": "PO-1002",
+      "product": "SF-BASE",
+      "qty_planned": "8",
+      "qty_completed": "690",
+      "qty_in_wip": "8",
+      "material_completion": "1",
+      "wip_progress": "0.5",
+      "cost_material": "123.04",
+      "cost_labor": "4.50",
+      "cost_oh": "5.09",
+      "carried_from": "2026-10"
+    },
+    {
+      "order_no": "PO-1004",
+      "product": "FG-KT100",
+      "qty_planned": "47",
+      "qty_completed": "150",
+      "qty_in_wip": "47",
+      "material_completion": "1",
+      "wip_progress": "0.4",
+      "cost_material": "2095.35",
+      "cost_labor": "56.90",
+      "cost_oh": "60.59",
+      "carried_from": "2026-10"
+    }
+  ]
+}

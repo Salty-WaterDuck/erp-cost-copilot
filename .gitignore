@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# 运行产物
+out.txt
+*.log
+*.db
+tmp/
+.test-*/
+.coverage
+.pytest_cache/
+data/tasks_*.json
+
+# 编辑器
+.idea/
+.vscode/
+.DS_Store
+
+# 本地草稿（不进入开源包）
+思维导图.jpg
