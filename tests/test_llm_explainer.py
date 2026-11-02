@@ -4,6 +4,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 from costcontrol import load_dataset, run_cost
+from costcontrol.challenge import TOOL_SCHEMA
 from costcontrol.cli import main
 from costcontrol.llm_explainer import (
     DeepSeekProvider,
@@ -109,6 +110,78 @@ class ProviderTest(unittest.TestCase):
         provider = DeepSeekProvider("k", transport=lambda *args: {"oops": 1})
         with self.assertRaises(LLMError):
             provider.complete(self.prompt)
+
+    def test_deepseek_tool_call(self):
+        captured = {}
+
+        def transport(url, payload, headers, timeout):
+            captured["payload"] = payload
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "tool_calls": [
+                                {
+                                    "function": {
+                                        "name": "update_confidence",
+                                        "arguments": '{"verdict": "weakened"}',
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+
+        provider = DeepSeekProvider("test-key", transport=transport)
+        call = provider.complete_tool(self.prompt, TOOL_SCHEMA)
+        self.assertEqual(call.name, "update_confidence")
+        self.assertEqual(call.arguments["verdict"], "weakened")
+        self.assertEqual(
+            captured["payload"]["tools"][0]["function"]["name"],
+            "update_confidence",
+        )
+        self.assertEqual(
+            captured["payload"]["tool_choice"]["function"]["name"],
+            "update_confidence",
+        )
+
+    def test_deepseek_tool_multiple_rejected(self):
+        provider = DeepSeekProvider(
+            "k",
+            transport=lambda *args: {
+                "choices": [
+                    {
+                        "message": {
+                            "tool_calls": [
+                                {"function": {"name": "a", "arguments": "{}"}},
+                                {"function": {"name": "b", "arguments": "{}"}},
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+        with self.assertRaises(LLMError):
+            provider.complete_tool(self.prompt, TOOL_SCHEMA)
+
+    def test_deepseek_tool_invalid_json(self):
+        provider = DeepSeekProvider(
+            "k",
+            transport=lambda *args: {
+                "choices": [
+                    {
+                        "message": {
+                            "tool_calls": [
+                                {"function": {"name": "update_confidence", "arguments": "{bad"}}
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+        with self.assertRaises(LLMError):
+            provider.complete_tool(self.prompt, TOOL_SCHEMA)
 
     def test_ollama_payload(self):
         captured = {}

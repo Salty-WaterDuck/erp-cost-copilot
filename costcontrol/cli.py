@@ -75,6 +75,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--attribute", action="store_true", help="生成差异归因报告")
     parser.add_argument("--diagnose", action="store_true", help="生成差异诊断（原因 / 证据 / 反证）")
     parser.add_argument("--challenge", help="对诊断结论提出反证，重新评估置信度")
+    parser.add_argument("--challenge-log", type=Path, help="结构化反证裁决 JSONL 路径")
     parser.add_argument(
         "--translate-config",
         type=Path,
@@ -413,7 +414,7 @@ def _dispatch(
         return 0
 
     if args.diagnose:
-        from .challenge import pick_target, review_with_llm
+        from .challenge import pick_target, record_review, review_with_llm
         from .diagnosis import diagnose_facts, render_diagnosis
         from .facts import build_variance_facts
         from .llm_explainer import LLMError, load_sense, provider_from_env
@@ -430,19 +431,25 @@ def _dispatch(
         if args.challenge:
             target = pick_target(diagnoses, args.challenge)
             try:
-                explanation = review_with_llm(
-                    target, args.challenge, sense, provider
-                )
+                review = review_with_llm(target, args.challenge, sense, provider)
             except (LLMError, ValueError) as exc:
                 print(f"反证复核失败：{exc}", file=sys.stderr)
                 return 2
-            print("\n" + explanation.text)
-            print(f"\n— provider: {explanation.provider} / model: {explanation.model}")
+            print("\n" + review.text)
+            print(f"\n— provider: {review.provider} / model: {review.model}")
+            if review.decision is not None:
+                log_path = args.challenge_log or (
+                    Path("data") / f"challenges_{run.sheet.period}.jsonl"
+                )
+                record_review(review, target, log_path)
+                print(f"结构化裁决已写入 {log_path}")
+            elif review.fallback_reason:
+                print(f"已回退离线规则：{review.fallback_reason}")
             if args.show_prompt:
                 print("\n--- system prompt ---")
-                print(explanation.prompt.system)
+                print(review.prompt.system)
                 print("\n--- user prompt ---")
-                print(explanation.prompt.user)
+                print(review.prompt.user)
         return 0
 
     if args.explain:

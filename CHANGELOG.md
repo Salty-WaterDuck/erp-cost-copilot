@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.15.0 — 2026-11-02
+
+### 新增
+
+- **结构化反证**：`--challenge` 在接入模型时改为 Function Calling，调用
+  `update_confidence(verdict, hit_evidence, adjusted_score, rationale, actions)`。
+- **证据 ID 白名单**：prompt 给证据分配 `E1..En`，模型只能引用、不能自造；
+- **分数跳变约束**：0–1 边界、无新证据上调 ≤0.10、下调 ≤0.50；
+- **verdict 自洽校验**：`upheld` / `weakened` / `overturned` / `needs_evidence`
+  与分数、命中证据互相校验；
+- **失败回退**：Schema/语义校验失败、工具调用异常、provider 不支持工具时，
+  自动回退离线 `challenge()`，并打印回退原因；
+- **审计日志**：通过校验的裁决追加到 `data/challenges_<期间>.jsonl`，
+  也可用 `--challenge-log` 指定路径。
+
+### 兼容
+
+- 离线 `--challenge` 行为不变（0.54 → 0.29），仍可完全断网演示。
+- DeepSeek / Ollama 增加 `complete_tool`，文本模式保持原样。
+
 ## 0.14.0 — 2026-10-31
 
 首个开源版本：**ERP-Cost-Copilot**。

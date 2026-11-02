@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "costcontrol"
-version = "0.14.0"
-description = "ERP-Cost-Copilot：排雷工单、配置翻译、反证复核与成本强归因（纯标准库）"
+version = "0.15.0"
+description = "ERP-Cost-Copilot：结构化反证、排雷工单、配置翻译与成本强归因（纯标准库）"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []

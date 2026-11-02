@@ -175,6 +175,31 @@ python -m costcontrol.cli --diagnose --challenge "车间说他们已经退料了
   2. 补证后重新运行 --diagnose，对比调整前后的置信度与主因。
 ```
 
+### 结构化反证：工具调用 + 校验 + 回退
+
+接入 DeepSeek / Ollama 时，模型不再自由写 Markdown，而是必须调用
+`update_confidence` 工具返回结构化裁决：
+
+```text
+update_confidence(
+  verdict, hit_evidence, adjusted_score, rationale, actions
+)
+```
+
+- `hit_evidence` 只能引用 `E1..En`，不能自造证据；
+- `adjusted_score` 有 0–1 边界，且没有新证据时上调不得超过 0.10、下调不得超过 0.50；
+- `verdict` 与分数必须自洽：`upheld` / `weakened` / `overturned` / `needs_evidence`；
+- `actions` 1–3 条，每条必须带 `owner`、`action`、`evidence_needed`；
+- 任何一项不通过，直接回退离线规则，并打印原因：
+
+```text
+> 结构化输出未通过校验（adjusted_score 超出 0–1：1.4），已回退离线规则。
+```
+
+通过校验的裁决会追加到 `data/challenges_<期间>.jsonl`，记录原分数、调整分数、
+命中证据、模型与回退原因，便于审计和后续学习。
+实现细节与审计字段见 [docs/structured-challenge.md](docs/structured-challenge.md)。
+
 归因强度分四层：
 
 | 层级 | 做法 | 命令 |
@@ -182,7 +207,7 @@ python -m costcontrol.cli --diagnose --challenge "车间说他们已经退料了
 | 1 规则映射 | 成本要素 → 部门 / 岗位 | `--attribute` |
 | 2 证据链 | 每条结论列出单据与数字 | `--facts` 的 evidence |
 | 3 假设检验 | 候选原因打分、排序、排除 | `--diagnose` |
-| 4 反证复核 | 用财务反证重估置信度，给出补证动作 | `--challenge` |
+| 4 反证复核 | 工具调用重估 + Schema/语义校验 + 回退 | `--challenge` |
 
 ## ERP 配置翻译：把分摊文档讲成人话
 
@@ -245,7 +270,7 @@ PO-1004  FG-KT100    150/200   8,916.38    520.00    553.63   9,990.01   51.8478
 | 数据排雷 | 完工未报工、负数领用无退料、分摊动因为 0 等单据异常，先于差异报出 |
 | 排雷工单化 | 异常生成待办（责任人 / 截止日 / 补什么单），补证后复跑并对比异常、未分配、成本与置信度 |
 | AI 排雷清单 | 把数据异常、差异、预警与行业 Sense 变成自然语言清单：结论 / 依据 / 动作 / 责任岗位 |
-| 反证复核 | 财务输入反证，按命中关系下调置信度，给出补证动作与「结论是否仍成立」 |
+| 反证复核 | 财务输入反证，模型通过 tool call 返回结构化裁决；校验证据 ID、分数跳变与 verdict 自洽，失败回退离线规则 |
 | ERP 配置翻译 | 读分摊说明 / Costing Sheet，翻译成大白话，并指出动因未更新、比例不闭合等坑 |
 | 可插拔模型 | 兼容 DeepSeek API 与本地 Ollama；无密钥、断网时自动退化为离线规则 |
 | 业务 Sense 模板 | YAML 定义 BOM 特征、分摊基准、异常特征与责任岗位，换行业只换配置 |
@@ -618,7 +643,7 @@ FG-KT100 成本结构：材料 87.06% → 75.88%，人工 6.37% → 11.56%，费
 | `llm_explainer.py` | AI 解释层：事实组装、提示词、DeepSeek / Ollama / 离线兜底 |
 | `audit.py` | 数据排雷：完工未报工、负数领用无退料、动因为 0 |
 | `config_translator.py` | ERP 分摊配置翻译：规则解析、风险提示、大白话输出 |
-| `challenge.py` | 反证复核：重估置信度、给出补证动作 |
+| `challenge.py` | 反证复核：tool call 裁决、Schema/语义校验、离线回退 |
 | `tasks.py` | 排雷工单：待办生成、状态跟踪、补证前后对比 |
 | `yaml_lite.py` | 零依赖 YAML 子集解析（业务 Sense 模板） |
 | `run.py` | 一次期末成本计算的编排 |
@@ -817,9 +842,10 @@ cost-control/
 │   ├── report-analysis.md # 报表级成本体检（趋势 / 勾稽 / 边界）
 │   ├── coverage.md       # 导出覆盖率检查（识别 / 能力矩阵 / 勾稽）
 │   ├── sap-baseline.md   # SAP 标准卡基准（适用条件 / 判读 / 边界）
+│   ├── structured-challenge.md  # 结构化反证（Tool Call / 校验 / 回退）
 │   ├── assets/           # 业务逻辑思维导图等静态图
 │   └── mvd-design-v2.md  # MVD 设计 v2（评审与合并修订）
-├── tests/                # 239 个单元测试
+├── tests/                # 256 个单元测试
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
 ├── LICENSE

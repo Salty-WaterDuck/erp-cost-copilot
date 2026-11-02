@@ -135,6 +135,14 @@ class ChatResult:
 
 
 @dataclass(frozen=True)
+class ToolCall:
+    """模型返回的一次工具调用：函数名 + 已解析的参数。"""
+
+    name: str
+    arguments: dict[str, Any]
+
+
+@dataclass(frozen=True)
 class Explanation:
     text: str
     provider: str
@@ -426,11 +434,36 @@ def urllib_post_json(
 Transport = Callable[[str, dict[str, Any], dict[str, str], float], dict[str, Any]]
 
 
+def _parse_openai_tool_call(data: dict[str, Any], label: str) -> ToolCall:
+    try:
+        message = data["choices"][0]["message"]
+        calls = message.get("tool_calls") or []
+    except (KeyError, IndexError, TypeError) as exc:
+        raise LLMError(f"{label} 返回格式异常：{data}") from exc
+    if len(calls) != 1:
+        raise LLMError(f"{label} 应返回 1 个工具调用，实际 {len(calls)} 个")
+    function = calls[0].get("function") or {}
+    name = str(function.get("name") or "")
+    arguments = function.get("arguments") or {}
+    if isinstance(arguments, str):
+        try:
+            arguments = json.loads(arguments)
+        except ValueError as exc:
+            raise LLMError(f"{label} 工具参数不是合法 JSON：{exc}") from exc
+    if not isinstance(arguments, dict):
+        raise LLMError(f"{label} 工具参数必须是对象")
+    return ToolCall(name=name, arguments=arguments)
+
+
 class LLMProvider(Protocol):
     name: str
     model: str
 
     def complete(self, prompt: ChatPrompt) -> ChatResult: ...
+
+    def complete_tool(
+        self, prompt: ChatPrompt, tool_schema: dict[str, Any]
+    ) -> ToolCall: ...
 
 
 class DeepSeekProvider:
@@ -471,6 +504,31 @@ class DeepSeekProvider:
             raise LLMError(f"DeepSeek 返回格式异常：{data}") from exc
         return ChatResult(text=str(text).strip(), provider=self.name, model=self.model)
 
+    def complete_tool(
+        self,
+        prompt: ChatPrompt,
+        tool_schema: dict[str, Any],
+    ) -> ToolCall:
+        """要求模型调用指定工具，返回函数名与参数。"""
+        payload = {
+            "model": self.model,
+            "messages": prompt.as_messages(),
+            "temperature": 0.2,
+            "stream": False,
+            "tools": [tool_schema],
+            "tool_choice": {
+                "type": "function",
+                "function": {"name": tool_schema["function"]["name"]},
+            },
+        }
+        data = self._transport(
+            self.base_url,
+            payload,
+            {"Authorization": f"Bearer {self.api_key}"},
+            self.timeout,
+        )
+        return _parse_openai_tool_call(data, "DeepSeek")
+
 
 class OllamaProvider:
     name = "ollama"
@@ -500,6 +558,35 @@ class OllamaProvider:
         except (KeyError, TypeError) as exc:
             raise LLMError(f"Ollama 返回格式异常：{data}") from exc
         return ChatResult(text=str(text).strip(), provider=self.name, model=self.model)
+
+    def complete_tool(
+        self,
+        prompt: ChatPrompt,
+        tool_schema: dict[str, Any],
+    ) -> ToolCall:
+        payload = {
+            "model": self.model,
+            "messages": prompt.as_messages(),
+            "stream": False,
+            "tools": [tool_schema],
+            "options": {"temperature": 0.2},
+        }
+        data = self._transport(self.base_url, payload, {}, self.timeout)
+        message = data.get("message") or {}
+        calls = message.get("tool_calls") or []
+        if len(calls) != 1:
+            raise LLMError(f"Ollama 应返回 1 个工具调用，实际 {len(calls)} 个")
+        function = calls[0].get("function") or {}
+        name = str(function.get("name") or "")
+        arguments = function.get("arguments") or {}
+        if isinstance(arguments, str):
+            try:
+                arguments = json.loads(arguments)
+            except ValueError as exc:
+                raise LLMError(f"Ollama 工具参数不是合法 JSON：{exc}") from exc
+        if not isinstance(arguments, dict):
+            raise LLMError("Ollama 工具参数必须是对象")
+        return ToolCall(name=name, arguments=arguments)
 
 
 def provider_from_env(env: dict[str, str] | None = None) -> LLMProvider | None:
@@ -570,6 +657,7 @@ __all__ = [
     "LLMExplainer",
     "LLMProvider",
     "OllamaProvider",
+    "ToolCall",
     "build_facts",
     "build_prompt",
     "load_sense",
