@@ -4,11 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "costcontrol"
-version = "0.15.0"
-description = "ERP-Cost-Copilot：结构化反证、排雷工单、配置翻译与成本强归因（纯标准库）"
+version = "0.16.0"
+description = "ERP-Cost-Copilot：RAG、评测集、FastAPI/Docker 与成本强归因（核心纯标准库）"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
+
+[project.optional-dependencies]
+api = [
+    "fastapi>=0.115,<1.0",
+    "uvicorn[standard]>=0.30,<1.0",
+    "pydantic>=2.7,<3.0",
+]
 
 [project.scripts]
 costcontrol = "costcontrol.cli:main"

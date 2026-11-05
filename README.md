@@ -275,6 +275,10 @@ PO-1004  FG-KT100    150/200   8,916.38    520.00    553.63   9,990.01   51.8478
 | 可插拔模型 | 兼容 DeepSeek API 与本地 Ollama；无密钥、断网时自动退化为离线规则 |
 | 业务 Sense 模板 | YAML 定义 BOM 特征、分摊基准、异常特征与责任岗位，换行业只换配置 |
 | 只读解释层 | 不写库、不改凭证；提示词约束「数字只能来自事实」，输出需人工复核 |
+| 本地 RAG | 零依赖 BM25 + 中文 bigram，检索 README / docs / YAML，返回原文段落与来源 |
+| 评测集 | 14 条固定用例覆盖诊断 / 排雷 / 反证 / RAG / 配置翻译，`tools/run_eval.py` 一键回归 |
+| FastAPI 服务 | 可选依赖：排雷、诊断、反证、RAG、评测、配置翻译的只读 HTTP 接口 |
+| Docker | `docker compose up --build` 一条命令起服务，默认离线模式 |
 | 强归因诊断 | 每条差异给出候选原因、证据链、反证条件与置信度；证据不足明确转人工 |
 | 报表级成本体检 | 只有 SAP/金蝶/用友汇总报表时，做趋势、异常与跨表勾稽，不重算成本 |
 | 导出覆盖率检查 | 按表头识别单据类型，给出缺失列、能力矩阵与跨表勾稽，先判断数据能做什么 |
@@ -299,6 +303,69 @@ PO-1004  FG-KT100    150/200   8,916.38    520.00    553.63   9,990.01   51.8478
 | 跨期在产结转 | 关账时按材料/人工/费用快照未完工工单，重开账期自动带入；结账同时结转总账余额 |
 | Web 看板 | 标准库 `http.server` 只读看板：KPI、预警、工单下钻、凭证、成本还原 |
 | 成本守恒 | 完工入库 + 期末在产 ≡ 工单总成本，每张工单都有测试兜底 |
+
+## RAG / 评测 / API / Docker
+
+### 本地 RAG（零依赖）
+
+```bash
+python -m costcontrol.cli --rag "未分配制造费用怎么处理" --rag-k 3
+```
+
+```text
+## RAG 检索 · 未分配制造费用怎么处理
+1. docs/accounting.md · 未分配制造费用的两种态度（score 31.06）
+   ### 未分配制造费用的两种态度 | 模式 | 行为 | ...
+```
+
+不接向量库、不调 embedding：BM25 + 中文 bigram，索引 README、`docs/`、`config_templates/`
+与分摊配置原文。只返回原文段落与来源，不生成新事实。
+
+### 评测集
+
+```bash
+python tools/run_eval.py --json eval/report.json
+```
+
+```text
+用例 14 · 通过 14 · 通过率 100.0%
+| 类型 | 总数 | 通过 |
+| diagnosis | 6 | 6 |
+| anomaly | 3 | 3 |
+| challenge | 1 | 1 |
+| rag | 3 | 3 |
+| config | 1 | 1 |
+```
+
+用例在 `eval/cases.jsonl`，覆盖：材料超耗主因、半成品转入、采购涨价、人工加班、
+费用超支、三类脏数据、反证复核 0.54→0.29、RAG 命中、配置规则条数。
+
+### FastAPI 服务（可选依赖）
+
+```bash
+python -m pip install -r service/requirements.txt
+uvicorn service.app:app --reload --port 8000
+```
+
+然后打开 `http://127.0.0.1:8000/docs`。接口包括：
+
+- `POST /v1/rag`：文档检索；
+- `GET /v1/checkup?dataset=dirty`：排雷清单；
+- `GET /v1/diagnose?dataset=demo`：强归因诊断；
+- `POST /v1/challenge`：反证复核；
+- `POST /v1/translate-config`：配置翻译；
+- `GET /v1/eval`：跑评测集。
+
+`dataset` 只允许 `demo` / `november` / `dirty` / `fixed`，不接受任意路径。
+
+### Docker
+
+```bash
+docker compose up --build
+```
+
+`Dockerfile` 基于 `python:3.12-slim`，默认 `CC_LLM_PROVIDER=offline`，不依赖外网。
+核心引擎仍是零依赖；FastAPI / uvicorn 只在 `service/requirements.txt` 里。
 
 ## 30 秒上手
 
@@ -775,6 +842,9 @@ python -m costcontrol.cli --data data/demo_ningbo_2026_11.json --order PO-1004
 - [x] 排雷工单化：责任人 / 截止日 / 补证动作，补证后复跑对比（`--tasks` / `--rerun-tasks`）
 - [x] ERP 配置翻译：分摊说明 → 大白话 + 风险（`--translate-config`）
 - [x] 反证复核：财务反证 → 重估置信度 + 补证动作（`--challenge`）
+- [x] 本地 RAG：BM25 + 中文 bigram，检索文档并返回来源（`--rag`）
+- [x] 评测集：14 条用例覆盖诊断 / 排雷 / 反证 / RAG / 配置（`tools/run_eval.py`）
+- [x] FastAPI / Docker：只读 HTTP 接口与一键容器化（`service/`）
 - [ ] 历史基线与人工反馈学习（连续期间单耗 / 工时 / 价格序列）
 - [ ] 真实导出接入：列名映射、编码、与 ERP 成本报表对数
 - [ ] SAP / 用友 / 金蝶差异类别对照表（含「无对应」标注）
@@ -813,13 +883,22 @@ cost-control/
 │   ├── config_translator.py  # ERP 分摊配置翻译
 │   ├── challenge.py      # 反证复核
 │   ├── tasks.py          # 排雷工单（待办 / 状态 / 前后对比）
+│   ├── rag.py            # 本地 RAG（BM25 + 中文 bigram）
+│   ├── evaluation.py     # 评测集运行器
 │   ├── yaml_lite.py      # 零依赖 YAML 子集解析
 │   ├── run.py            # 编排
 │   ├── report.py         # 报表渲染
 │   └── cli.py            # 命令行
 ├── tools/
 │   ├── make_dirty_data.py  # 生成脏数据演示集
-│   └── fix_demo_data.py    # 生成补证后的演示数据
+│   ├── fix_demo_data.py    # 生成补证后的演示数据
+│   └── run_eval.py         # 运行评测集
+├── eval/
+│   └── cases.jsonl         # 14 条固定评测用例
+├── service/
+│   ├── app.py              # FastAPI 只读服务
+│   ├── requirements.txt    # API 运行依赖（可选）
+│   └── README.md           # 接口说明
 ├── config_templates/
 │   ├── discrete_manufacturing.yaml  # 离散制造业务 Sense
 │   └── adapters/
@@ -845,7 +924,10 @@ cost-control/
 │   ├── structured-challenge.md  # 结构化反证（Tool Call / 校验 / 回退）
 │   ├── assets/           # 业务逻辑思维导图等静态图
 │   └── mvd-design-v2.md  # MVD 设计 v2（评审与合并修订）
-├── tests/                # 256 个单元测试
+├── tests/                # 276 个单元测试（API 用例需装 FastAPI）
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
 ├── LICENSE

@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.16.0 — 2026-11-05
+
+### 新增
+
+- **本地 RAG**：零依赖 BM25 + 中文 bigram，索引 README / docs / YAML / 分摊配置，
+  `--rag` 返回原文段落与来源；不接向量库、不调 embedding。
+- **评测集**：`eval/cases.jsonl` 14 条用例，覆盖诊断、排雷、反证、RAG、配置翻译；
+  `python tools/run_eval.py` 输出通过率并支持 `--json`。
+- **FastAPI 服务**：`service/app.py` 提供 `/v1/rag`、`/v1/checkup`、`/v1/diagnose`、
+  `/v1/challenge`、`/v1/translate-config`、`/v1/eval`，只读、数据集白名单。
+- **Docker**：`Dockerfile` + `docker-compose.yml`，默认离线模式，一条命令起服务。
+- **可选依赖**：FastAPI/uvicorn 只在 `service/requirements.txt`，核心仍零依赖。
+
+### 兼容
+
+- 现有 CLI、离线模式、239→276 个测试全部保持；未装 FastAPI 时 API 用例自动跳过，
+  CI 单独 job 安装依赖后运行。
+
 ## 0.15.0 — 2026-11-02
 
 ### 新增

@@ -1,0 +1,14 @@
+{"id": "diag-material-overuse", "kind": "diagnosis", "dataset": "demo_ningbo.json", "cost_element": "MAT-QTY-VAR", "material": "RM-SS304", "order": "PO-1001", "expect": {"top_code": "OVERUSE", "min_score": 0.5}}
+{"id": "diag-material-saving", "kind": "diagnosis", "dataset": "demo_ningbo.json", "cost_element": "MAT-QTY-VAR", "material": "RM-ABS", "order": "PO-1002", "expect": {"top_code": "SAVING", "min_score": 0.5}}
+{"id": "diag-transfer-price", "kind": "diagnosis", "dataset": "demo_ningbo.json", "cost_element": "MAT-PRICE-VAR", "material": "SF-BODY", "order": "PO-1003", "expect": {"top_code": "TRANSFER", "min_score": 0.75}}
+{"id": "diag-purchase-price", "kind": "diagnosis", "dataset": "demo_ningbo.json", "cost_element": "MAT-PRICE-VAR", "material": "PT-THERMO", "order": "PO-1001", "expect": {"top_code": "PURCHASE", "min_score": 0.55}}
+{"id": "diag-labor-overtime", "kind": "diagnosis", "dataset": "demo_ningbo.json", "cost_element": "LABOR-EFF-VAR", "order": "PO-1003", "cost_center": "CC-ASM", "expect": {"top_code": "OVERTIME", "min_score": 0.7}}
+{"id": "diag-overhead-spending", "kind": "diagnosis", "dataset": "demo_ningbo.json", "cost_element": "OH-SPEND-VAR", "order": "PO-1001", "cost_center": "CC-ASM", "expect": {"top_code": "SPENDING", "min_score": 0.55}}
+{"id": "anomaly-no-labor", "kind": "anomaly", "dataset": "dirty_erp_export.json", "expect": {"codes": ["ORDER-NO-LABOR"]}}
+{"id": "anomaly-negative-issue", "kind": "anomaly", "dataset": "dirty_erp_export.json", "expect": {"codes": ["NEGATIVE-ISSUE-NO-RETURN"]}}
+{"id": "anomaly-driver-zero", "kind": "anomaly", "dataset": "dirty_erp_export.json", "expect": {"codes": ["DRIVER-ZERO"]}}
+{"id": "challenge-return", "kind": "challenge", "dataset": "demo_ningbo.json", "text": "车间说已经退料了，只是单据没录", "expect": {"adjusted_score": 0.29, "still_valid": false}}
+{"id": "rag-unallocated", "kind": "rag", "query": "未分配制造费用怎么处理", "expect": {"source_contains": "docs/accounting.md"}}
+{"id": "rag-sqlite", "kind": "rag", "query": "SQLite 多期间怎么持久化", "expect": {"source_contains": "docs/persistence.md"}}
+{"id": "rag-equiv-units", "kind": "rag", "query": "约当产量怎么算", "expect": {"source_contains": "docs/cost-model.md"}}
+{"id": "config-allocation", "kind": "config", "file": "erp_allocation_config.txt", "expect": {"rules": 4, "warning_contains": "尚未更新"}}

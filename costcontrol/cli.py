@@ -76,6 +76,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--diagnose", action="store_true", help="生成差异诊断（原因 / 证据 / 反证）")
     parser.add_argument("--challenge", help="对诊断结论提出反证，重新评估置信度")
     parser.add_argument("--challenge-log", type=Path, help="结构化反证裁决 JSONL 路径")
+    parser.add_argument("--rag", metavar="QUERY", help="本地文档检索（BM25，零依赖）")
+    parser.add_argument("--rag-k", type=int, default=3, help="RAG 返回条数（默认 3）")
     parser.add_argument(
         "--translate-config",
         type=Path,
@@ -163,6 +165,20 @@ def _dispatch(
     parser: argparse.ArgumentParser,
     store: Store | None,
 ) -> int:
+    if args.rag:
+        from .rag import render_hits, search
+
+        if not 1 <= args.rag_k <= 10:
+            print("--rag-k 必须在 1–10 之间", file=sys.stderr)
+            return 2
+        try:
+            hits = search(args.rag, k=args.rag_k)
+        except ValueError as exc:
+            print(f"检索失败：{exc}", file=sys.stderr)
+            return 2
+        print(render_hits(args.rag, hits))
+        return 0
+
     if args.translate_config or args.config_text:
         from .config_translator import read_config, translate_config
         from .llm_explainer import LLMError, load_sense, provider_from_env

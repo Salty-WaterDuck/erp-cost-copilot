@@ -1,0 +1,8 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      CC_LLM_PROVIDER: offline
+    restart: unless-stopped

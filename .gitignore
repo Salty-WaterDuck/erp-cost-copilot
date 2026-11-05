@@ -17,6 +17,7 @@ tmp/
 .pytest_cache/
 data/tasks_*.json
 data/challenges_*.jsonl
+eval/report.json
 
 # 编辑器
 .idea/

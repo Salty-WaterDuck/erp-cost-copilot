@@ -1,0 +1,15 @@
+.git
+.github
+__pycache__
+*.py[cod]
+*.egg-info
+dist
+build
+tests
+.test-*
+data/tasks_*.json
+data/challenges_*.jsonl
+exports
+思维导图.jpg
+.venv
+venv
