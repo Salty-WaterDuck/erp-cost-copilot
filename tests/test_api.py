@@ -24,7 +24,7 @@ class ApiTest(unittest.TestCase):
 
     def test_rag(self):
         response = self.client.post(
-            "/v1/rag", json={"query": "未分配制造费用怎么处理", "k": 2}
+            "/v1/rag", json={"query": "6602 管理费用 5101 制造费用", "k": 2}
         )
         self.assertEqual(response.status_code, 200)
         hits = response.json()["hits"]

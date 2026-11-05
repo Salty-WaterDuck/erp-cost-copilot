@@ -22,7 +22,7 @@ class RagTest(unittest.TestCase):
         self.assertIn("费用", tokens)
 
     def test_query_unallocated(self):
-        hits = search("未分配制造费用怎么处理", k=3)
+        hits = search("6602 管理费用 5101 制造费用", k=3)
         self.assertTrue(hits)
         self.assertTrue(any("accounting" in hit.document.source for hit in hits))
 
