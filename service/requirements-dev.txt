@@ -1,2 +1,4 @@
 -r requirements.txt
-httpx>=0.27,<1.0
+# 与 FastAPI/Starlette 的 TestClient 兼容；0.28 在部分版本会报
+# "Client.__init__() got an unexpected keyword argument 'app'"
+httpx>=0.27,<0.28
