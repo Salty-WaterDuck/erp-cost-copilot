@@ -22,6 +22,8 @@ from .challenge import challenge, pick_target
 from .config_translator import parse_config
 from .dataset import load_dataset
 from .diagnosis import diagnose_facts
+from .driver_facts import load_driver_dataset
+from .driver_rules import audit_drivers
 from .facts import build_variance_facts
 from .llm_explainer import load_sense
 from .rag import search
@@ -152,6 +154,19 @@ def _config_case(case: dict, root: Path) -> tuple[bool, str]:
     return ok, f"rules={len(review.rules)} warnings={len(review.warnings)}"
 
 
+def _abc_case(case: dict, root: Path) -> tuple[bool, str]:
+    dataset = load_driver_dataset(root / "data" / case["file"])
+    report = audit_drivers(dataset)
+    counts = report.counts()
+    expect = case["expect"]
+    ok = all(counts[key] >= value for key, value in expect.get("min_counts", {}).items())
+    codes = {issue.code for issue in report.issues}
+    missing = [code for code in expect.get("codes", []) if code not in codes]
+    ok = ok and not missing
+    detail = f"counts={counts}" + (f" missing={missing}" if missing else "")
+    return ok, detail
+
+
 def run_case(case: dict, root: Path | None = None) -> EvalResult:
     base = root or ROOT
     kind = case["kind"]
@@ -161,6 +176,7 @@ def run_case(case: dict, root: Path | None = None) -> EvalResult:
         "challenge": _challenge_case,
         "rag": _rag_case,
         "config": _config_case,
+        "abc": _abc_case,
     }
     handler = handlers.get(kind)
     if handler is None:

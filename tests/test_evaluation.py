@@ -20,7 +20,7 @@ class EvaluationTest(unittest.TestCase):
     def test_covers_all_kinds(self):
         kinds = {item.kind for item in self.report.results}
         self.assertEqual(
-            kinds, {"diagnosis", "anomaly", "challenge", "rag", "config"}
+            kinds, {"diagnosis", "anomaly", "challenge", "rag", "config", "abc"}
         )
 
     def test_unknown_kind_fails_gracefully(self):

@@ -78,6 +78,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--challenge-log", type=Path, help="结构化反证裁决 JSONL 路径")
     parser.add_argument("--rag", metavar="QUERY", help="本地文档检索（BM25，零依赖）")
     parser.add_argument("--rag-k", type=int, default=3, help="RAG 返回条数（默认 3）")
+    parser.add_argument("--abc-check", type=Path, help="ABC 动因数据前置校验（JSON）")
     parser.add_argument(
         "--translate-config",
         type=Path,
@@ -165,6 +166,19 @@ def _dispatch(
     parser: argparse.ArgumentParser,
     store: Store | None,
 ) -> int:
+    if args.abc_check:
+        from .driver_facts import load_driver_dataset
+        from .driver_rules import audit_drivers, render_audit
+
+        try:
+            dataset = load_driver_dataset(args.abc_check)
+            report = audit_drivers(dataset)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            print(f"ABC 动因校验失败：{exc}", file=sys.stderr)
+            return 2
+        print(render_audit(report))
+        return 0
+
     if args.rag:
         from .rag import render_hits, search
 

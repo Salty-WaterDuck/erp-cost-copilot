@@ -76,6 +76,14 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(payload["passed"], payload["total"])
         self.assertEqual(payload["pass_rate"], 1.0)
 
+    def test_abc_check(self):
+        response = self.client.get("/v1/abc-check?file=sample")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["period"], "2026-10")
+        self.assertGreaterEqual(payload["counts"]["rejected"], 8)
+        self.assertIn("ABC 动因数据前置校验", payload["markdown"])
+
     def test_unknown_dataset(self):
         response = self.client.get("/v1/checkup?dataset=../../etc/passwd")
         self.assertEqual(response.status_code, 404)

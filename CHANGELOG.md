@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.17.0 — 2026-11-05
+
+### 新增
+
+- **ABC 动因前置校验层**：`--abc-check`，只判断动因记录能否进入 ABC，不计算 ABC；
+- **DriverFact 契约**：event / activity / driver_type / quantity / unit / cost_object /
+  resource / source_tag / ingested_at / state / estimated；
+- **11 条规则**：零负动因、重叠、重复、单位不符、动因量与时长不符、缺成本对象、
+  停机记动因、单日超产能、关账后迟到、传感器僵值、动因量对账；
+- **Gate**：accepted / review / estimated / rejected，每条异常带证据、反证条件、
+  责任人与动作；估算必须打标，不做静默 fillna；
+- **样例数据**：43 条 MES/IoT 风格动因，5 个活动、4 个资源，埋 10 类错误；
+- **API**：`GET /v1/abc-check?file=sample`；
+- **评测**：新增 2 条 ABC 用例，总计 16 条。
+
+### 定位
+
+- 不替换客户 ABC/TDABC 引擎；
+- 适用流程/混合制造、高自动化、多产品共线、已有 MES/IoT 但财务不信任设备数据的企业；
+- 组装型、直接材料占比高的企业，工单成本通常已足够。
+
 ## 0.16.0 — 2026-11-05
 
 ### 新增

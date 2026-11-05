@@ -276,9 +276,10 @@ PO-1004  FG-KT100    150/200   8,916.38    520.00    553.63   9,990.01   51.8478
 | 业务 Sense 模板 | YAML 定义 BOM 特征、分摊基准、异常特征与责任岗位，换行业只换配置 |
 | 只读解释层 | 不写库、不改凭证；提示词约束「数字只能来自事实」，输出需人工复核 |
 | 本地 RAG | 零依赖 BM25 + 中文 bigram，检索 README / docs / YAML，返回原文段落与来源 |
-| 评测集 | 14 条固定用例覆盖诊断 / 排雷 / 反证 / RAG / 配置翻译，`tools/run_eval.py` 一键回归 |
+| 评测集 | 16 条固定用例覆盖诊断 / 排雷 / 反证 / RAG / 配置 / ABC，`tools/run_eval.py` 一键回归 |
 | FastAPI 服务 | 可选依赖：排雷、诊断、反证、RAG、评测、配置翻译的只读 HTTP 接口 |
 | Docker | `docker compose up --build` 一条命令起服务，默认离线模式 |
+| ABC 动因校验 | 动因事实契约 + 11 条规则 + Gate（通过/复核/估算/拒绝），不计算 ABC |
 | 强归因诊断 | 每条差异给出候选原因、证据链、反证条件与置信度；证据不足明确转人工 |
 | 报表级成本体检 | 只有 SAP/金蝶/用友汇总报表时，做趋势、异常与跨表勾稽，不重算成本 |
 | 导出覆盖率检查 | 按表头识别单据类型，给出缺失列、能力矩阵与跨表勾稽，先判断数据能做什么 |
@@ -328,17 +329,18 @@ python tools/run_eval.py --json eval/report.json
 ```
 
 ```text
-用例 14 · 通过 14 · 通过率 100.0%
+用例 16 · 通过 16 · 通过率 100.0%
 | 类型 | 总数 | 通过 |
 | diagnosis | 6 | 6 |
 | anomaly | 3 | 3 |
 | challenge | 1 | 1 |
 | rag | 3 | 3 |
 | config | 1 | 1 |
+| abc | 2 | 2 |
 ```
 
 用例在 `eval/cases.jsonl`，覆盖：材料超耗主因、半成品转入、采购涨价、人工加班、
-费用超支、三类脏数据、反证复核 0.54→0.29、RAG 命中、配置规则条数。
+费用超支、三类脏数据、反证复核 0.54→0.29、RAG 命中、配置规则条数、ABC 动因 Gate。
 
 ### FastAPI 服务（可选依赖）
 
@@ -354,6 +356,7 @@ uvicorn service.app:app --reload --port 8000
 - `GET /v1/diagnose?dataset=demo`：强归因诊断；
 - `POST /v1/challenge`：反证复核；
 - `POST /v1/translate-config`：配置翻译；
+- `GET /v1/abc-check?file=sample`：ABC 动因前置校验；
 - `GET /v1/eval`：跑评测集。
 
 `dataset` 只允许 `demo` / `november` / `dirty` / `fixed`，不接受任意路径。
@@ -366,6 +369,41 @@ docker compose up --build
 
 `Dockerfile` 基于 `python:3.12-slim`，默认 `CC_LLM_PROVIDER=offline`，不依赖外网。
 核心引擎仍是零依赖；FastAPI / uvicorn 只在 `service/requirements.txt` 里。
+
+## ABC 动因数据前置校验（可选）
+
+不是 ABC 引擎，而是**进入 ABC / TDABC 之前的动因数据可信层**。MES/IoT 能采到
+大量设备数据，但财务不敢直接用；这一层逐条判断「能不能进 ABC、凭什么、谁签字」。
+
+```bash
+python -m costcontrol.cli --abc-check data/abc_driver_sample.json
+```
+
+```text
+## ABC 动因数据前置校验 · 2026-10
+事实 43 条 · 通过 32 / 待复核 1 / 估算 1 / 拒绝 9
+
+### 动因量对账
+| 活动 | 事实合计 | 台账合计 | 差异 | 结果 |
+| 喷涂 | 279 | 275 | 4 | ✗ |
+
+### Gate 汇总
+| 状态 | 条数 | 进入 ABC 的方式 |
+| 通过 | 32 | 直接进入 |
+| 待复核 | 1 | 责任人签字后进入 |
+| 估算 | 1 | 按批准模型估算，打标进入 |
+| 拒绝 | 9 | 不进入，转异常工单 |
+```
+
+规则包括：零/负动因、同资源重叠、重复事件、单位不一致、动因量与时长不符、
+缺成本对象、停机却记动因、单日超产能、关账后迟到、传感器僵值、动因量对账不符。
+每条都带证据、反证条件、责任人与动作。
+
+适用判断：组装型、直接材料占比高的企业，工单成本通常够用；流程/混合制造、
+高自动化、多产品共线、已有 MES/IoT 但财务不信任设备数据的企业，才是这层的主场。
+它不修改现有 job costing 引擎，ABC 计算仍交给客户现有系统。
+
+完整规则表与集成方式见 [docs/abc-driver-layer.md](docs/abc-driver-layer.md)。
 
 ## 30 秒上手
 
@@ -843,8 +881,9 @@ python -m costcontrol.cli --data data/demo_ningbo_2026_11.json --order PO-1004
 - [x] ERP 配置翻译：分摊说明 → 大白话 + 风险（`--translate-config`）
 - [x] 反证复核：财务反证 → 重估置信度 + 补证动作（`--challenge`）
 - [x] 本地 RAG：BM25 + 中文 bigram，检索文档并返回来源（`--rag`）
-- [x] 评测集：14 条用例覆盖诊断 / 排雷 / 反证 / RAG / 配置（`tools/run_eval.py`）
+- [x] 评测集：16 条用例覆盖诊断 / 排雷 / 反证 / RAG / 配置 / ABC（`tools/run_eval.py`）
 - [x] FastAPI / Docker：只读 HTTP 接口与一键容器化（`service/`）
+- [x] ABC 动因前置校验：DriverFact + 11 条规则 + Gate（`--abc-check`）
 - [ ] 历史基线与人工反馈学习（连续期间单耗 / 工时 / 价格序列）
 - [ ] 真实导出接入：列名映射、编码、与 ERP 成本报表对数
 - [ ] SAP / 用友 / 金蝶差异类别对照表（含「无对应」标注）
@@ -885,6 +924,8 @@ cost-control/
 │   ├── tasks.py          # 排雷工单（待办 / 状态 / 前后对比）
 │   ├── rag.py            # 本地 RAG（BM25 + 中文 bigram）
 │   ├── evaluation.py     # 评测集运行器
+│   ├── driver_facts.py   # ABC 动因事实契约
+│   ├── driver_rules.py   # ABC 动因规则与 Gate
 │   ├── yaml_lite.py      # 零依赖 YAML 子集解析
 │   ├── run.py            # 编排
 │   ├── report.py         # 报表渲染
@@ -892,9 +933,10 @@ cost-control/
 ├── tools/
 │   ├── make_dirty_data.py  # 生成脏数据演示集
 │   ├── fix_demo_data.py    # 生成补证后的演示数据
+│   ├── make_abc_data.py    # 生成 ABC 动因样例
 │   └── run_eval.py         # 运行评测集
 ├── eval/
-│   └── cases.jsonl         # 14 条固定评测用例
+│   └── cases.jsonl         # 16 条固定评测用例
 ├── service/
 │   ├── app.py              # FastAPI 只读服务
 │   ├── requirements.txt    # API 运行依赖（可选）
@@ -911,6 +953,7 @@ cost-control/
 │   ├── dirty_erp_export.json  # 脏数据：未报工 / 负数领用 / 动因为 0
 │   ├── dirty_erp_export_fixed.json  # 模拟补证后的数据（用于前后对比）
 │   ├── erp_allocation_config.txt  # 分摊配置原文（含未更新陷阱）
+│   ├── abc_driver_sample.json  # ABC 动因样例：43 条，埋 10 类错误
 │   └── auto_reports/     # 汽车零部件 13 张导出（SAP/金蝶/用友 + BOM/领料/报工/订单/费用/路线）
 ├── docs/
 │   ├── cost-model.md     # 成本模型与口径说明
@@ -922,9 +965,10 @@ cost-control/
 │   ├── coverage.md       # 导出覆盖率检查（识别 / 能力矩阵 / 勾稽）
 │   ├── sap-baseline.md   # SAP 标准卡基准（适用条件 / 判读 / 边界）
 │   ├── structured-challenge.md  # 结构化反证（Tool Call / 校验 / 回退）
+│   ├── abc-driver-layer.md  # ABC 动因前置校验（规则 / Gate / 边界）
 │   ├── assets/           # 业务逻辑思维导图等静态图
 │   └── mvd-design-v2.md  # MVD 设计 v2（评审与合并修订）
-├── tests/                # 276 个单元测试（API 用例需装 FastAPI）
+├── tests/                # 286 个单元测试（API 用例需装 FastAPI）
 ├── Dockerfile
 ├── docker-compose.yml
 ├── .dockerignore

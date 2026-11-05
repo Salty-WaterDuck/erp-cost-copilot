@@ -12,3 +12,5 @@
 {"id": "rag-sqlite", "kind": "rag", "query": "SQLite 多期间怎么持久化", "expect": {"source_contains": "docs/persistence.md"}}
 {"id": "rag-equiv-units", "kind": "rag", "query": "约当产量怎么算", "expect": {"source_contains": "docs/cost-model.md"}}
 {"id": "config-allocation", "kind": "config", "file": "erp_allocation_config.txt", "expect": {"rules": 4, "warning_contains": "尚未更新"}}
+{"id": "abc-gate", "kind": "abc", "file": "abc_driver_sample.json", "expect": {"min_counts": {"accepted": 30, "rejected": 8, "review": 1, "estimated": 1}}}
+{"id": "abc-codes", "kind": "abc", "file": "abc_driver_sample.json", "expect": {"codes": ["OVERLAP", "DUPLICATE", "CAPACITY-EXCEEDED", "DRIVER-TOTAL-MISMATCH", "STALE-SENSOR"]}}

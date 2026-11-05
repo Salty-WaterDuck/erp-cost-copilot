@@ -27,7 +27,7 @@ from .responsibility import attribute, render_report
 from .run import CostRun, run_cost
 from .store import PeriodStatus, Store
 
-__version__ = "0.16.0"
+__version__ = "0.17.0"
 
 __all__ = [
     "load_dataset",

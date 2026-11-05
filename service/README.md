@@ -35,6 +35,7 @@ docker run --rm -p 8000:8000 erp-cost-copilot
 | POST | `/v1/challenge` | 反证复核 `{dataset, text}` |
 | POST | `/v1/translate-config` | 分摊配置翻译 `{text}` |
 | GET | `/v1/eval` | 运行评测集并返回汇总 |
+| GET | `/v1/abc-check?file=sample` | ABC 动因数据前置校验 |
 
 `dataset` 只允许 `demo` / `november` / `dirty` / `fixed`，不接受任意文件路径。
 
@@ -50,6 +51,8 @@ curl -s "http://127.0.0.1:8000/v1/checkup?dataset=dirty"
 curl -s http://127.0.0.1:8000/v1/challenge \
   -H "Content-Type: application/json" \
   -d '{"dataset":"demo","text":"车间说已经退料了，只是单据没录"}'
+
+curl -s "http://127.0.0.1:8000/v1/abc-check?file=sample"
 ```
 
 ## 边界

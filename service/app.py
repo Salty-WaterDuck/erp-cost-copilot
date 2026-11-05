@@ -17,6 +17,8 @@ from costcontrol.challenge import challenge, pick_target
 from costcontrol.config_translator import parse_config, render_offline_translation
 from costcontrol.dataset import load_dataset
 from costcontrol.diagnosis import diagnose_facts
+from costcontrol.driver_facts import load_driver_dataset
+from costcontrol.driver_rules import audit_drivers, render_audit
 from costcontrol.evaluation import run_all
 from costcontrol.facts import build_variance_facts
 from costcontrol.llm_explainer import LLMExplainer, load_sense
@@ -30,6 +32,10 @@ DATASETS = {
     "november": ROOT / "data" / "demo_ningbo_2026_11.json",
     "dirty": ROOT / "data" / "dirty_erp_export.json",
     "fixed": ROOT / "data" / "dirty_erp_export_fixed.json",
+}
+
+ABC_FILES = {
+    "sample": ROOT / "data" / "abc_driver_sample.json",
 }
 
 app = FastAPI(
@@ -210,4 +216,32 @@ def eval_summary() -> dict:
             for item in report.results
             if not item.passed
         ],
+    }
+
+
+@app.get("/v1/abc-check")
+def abc_check(file: str = Query("sample")) -> dict:
+    if file not in ABC_FILES:
+        raise HTTPException(status_code=404, detail=f"未知 ABC 动因文件：{file}")
+    path = ABC_FILES[file]
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="ABC 动因样例缺失")
+    dataset = load_driver_dataset(path)
+    report = audit_drivers(dataset)
+    return {
+        "period": dataset.period,
+        "counts": report.counts(),
+        "issues": [
+            {
+                "code": item.code,
+                "severity": item.severity,
+                "title": item.title,
+                "detail": item.detail,
+                "event_id": item.event_id,
+                "owner": item.owner,
+                "falsifier": item.falsifier,
+            }
+            for item in report.issues
+        ],
+        "markdown": render_audit(report),
     }
