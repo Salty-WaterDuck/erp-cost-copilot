@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "costcontrol"
-version = "0.17.0"
+version = "0.17.1"
 description = "ERP-Cost-Copilot：RAG、评测、FastAPI/Docker、ABC 动因校验与成本强归因"
 readme = "README.md"
 requires-python = ">=3.11"
